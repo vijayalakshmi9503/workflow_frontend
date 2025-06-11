@@ -7,7 +7,7 @@ import Settings from './pages/Settings';
 import Login from './Login';
 import { FaBars } from 'react-icons/fa';
 import './components/Sidebar.css';
-
+import 'antd/dist/reset.css';
 const AppLayout = ({ collapsed, setCollapsed, onLogout }) => {
   return (
     <div className={`app-container ${collapsed ? 'sidebar-collapsed' : ''}`}>
