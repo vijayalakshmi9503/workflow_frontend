@@ -93,23 +93,21 @@ const Users = () => {
     setIsModalVisible(true);
   };
 
- 
 const handleDelete = (key) => {
-  Modal.confirm({
-    title: 'Are you sure you want to delete this record?',
-    onOk: async () => {
-      try {
-        await axios.delete(`/api/users/${key}`);
-        setData(prev => prev.filter(item => item.key !== key));
-      } catch (error) {
-        Modal.error({
-          title: 'Error',
-          content: error.response?.data?.message || 'Failed to delete user',
-        });
-      }
-    },
-  });
+  console.log('handleDelete called for key:', key);
+
+Modal.confirm({
+      title: 'Test Confirm',
+      onOk() {
+        console.log('Modal confirmed');
+      },
+      onCancel() {
+        console.log('Modal cancelled');
+      },
+    });
 };
+
+
   const handleFormSubmit = () => {
     form.validateFields().then(values => {
       setData(prev =>
