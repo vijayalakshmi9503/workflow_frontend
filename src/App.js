@@ -19,7 +19,7 @@ const AppLayout = ({ collapsed, setCollapsed, onLogout }) => {
         <button className="toggle-btn" onClick={() => setCollapsed(!collapsed)}>
           <FaBars />
         </button>
-        <span className="navbar-title">Welcome to Workflow Engine</span>
+      
 
         <div className="navbar-right">
           <img src="/avatar.jpg" alt="User" className="avatar" />

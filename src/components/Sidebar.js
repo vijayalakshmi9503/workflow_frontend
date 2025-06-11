@@ -5,9 +5,9 @@ import './Sidebar.css';
 
 const Sidebar = ({ collapsed, toggleSidebar }) => {
   const menuItems = [
-    { name: 'Dashboard', icon: <FaHome />, path: '/dashboard' },
-    { name: 'Users', icon: <FaUserFriends />, path: '/users' },
-    { name: 'Settings', icon: <FaCog />, path: '/settings' },
+    { name: 'New Request', icon: <FaHome />, path: '/dashboard' },
+    { name: 'My Request', icon: <FaUserFriends />, path: '/users' },
+    { name: 'Approvals', icon: <FaCog />, path: '/settings' },
   ];
 
   return (
