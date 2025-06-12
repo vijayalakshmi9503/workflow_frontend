@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  Card, Form, Input, Button, Select, Divider, Table, Space, Checkbox
+  Card, Form, Input, Button, Select, Divider, Table, Space, message
 } from 'antd';
 import {
   PlusOutlined,
@@ -24,8 +24,15 @@ const Dashboard = () => {
   const [showStepForm, setShowStepForm] = useState(false);
   const [editingIndex, setEditingIndex] = useState(null);
 
+  const selectedAction = Form.useWatch('action', stepForm);
+  const selectedApprovalMode = Form.useWatch('approvalMode', stepForm);
+
   const handleAddStep = (values) => {
-    const newStep = { ...values, key: Date.now() };
+    const newStep = {
+      ...values,
+      key: Date.now()
+    };
+
     const updatedSteps = [...steps];
 
     if (editingIndex !== null) {
@@ -74,6 +81,26 @@ const Dashboard = () => {
     return <SortableItem index={index} {...restProps} />;
   };
 
+  const handleSubmitWorkflow = async () => {
+    try {
+      const values = await form.validateFields();
+      if (steps.length === 0) {
+        message.error("Please add at least one step to the workflow.");
+        return;
+      }
+
+      const workflow = {
+        ...values,
+        steps
+      };
+
+      console.log("Submitted Workflow:", workflow);
+      message.success("Workflow submitted successfully!");
+    } catch (errorInfo) {
+      console.error("Validation Failed:", errorInfo);
+    }
+  };
+
   const columns = [
     {
       title: '',
@@ -88,11 +115,22 @@ const Dashboard = () => {
     },
     { title: 'Step Name', dataIndex: 'stepName' },
     { title: 'User Role', dataIndex: 'userRole' },
-    { title: 'Action', dataIndex: 'action' },
+    {
+      title: 'Action',
+      dataIndex: 'action',
+      render: (actions) => actions?.join(', ')
+    },
     { title: 'Approval Mode', dataIndex: 'approvalMode' },
     { title: 'Execution Mode', dataIndex: 'executionMode' },
     { title: 'Requires User ID', dataIndex: 'requiresUserId' },
     { title: 'Is User ID Dynamic', dataIndex: 'isUserIdDynamic' },
+    {
+      title: 'Initial Step',
+      render: (_, record) =>
+        record.previousStepPosition === null || record.previousStepPosition === undefined
+          ? 'Yes'
+          : 'No',
+    },
     {
       title: 'Actions',
       render: (_, record, index) => (
@@ -134,37 +172,66 @@ const Dashboard = () => {
             <Form.Item label="Step Name" name="stepName" rules={[{ required: true }]}>
               <Input />
             </Form.Item>
+
             <Form.Item label="Step Description" name="stepDescription">
               <Input.TextArea rows={2} />
             </Form.Item>
+
             <Form.Item label="User Role" name="userRole" rules={[{ required: true }]}>
               <Input />
             </Form.Item>
+
             <Form.Item label="Action" name="action" rules={[{ required: true }]}>
-              <Select>
+              <Select mode="multiple" placeholder="Select actions">
                 <Option value="approve">Approve</Option>
                 <Option value="reject">Reject</Option>
                 <Option value="revoke">Revoke</Option>
               </Select>
             </Form.Item>
 
-            {/* Show if action == revoke */}
-            {stepForm.getFieldValue('action') === 'revoke' && (
+            {Array.isArray(selectedAction) && selectedAction.includes('revoke') && (
               <>
-                <Form.Item label="Target Step Position" name="targetStepPosition">
-                  <Input type="number" />
+                <Form.Item label="Target Step Position" name="targetStepPosition" rules={[{ required: true }]}>
+                  <Select placeholder="Select target step">
+                    {steps.map((step, idx) => (
+                      <Option key={step.key} value={idx}>
+                        {`${idx + 1}. ${step.stepName}`}
+                      </Option>
+                    ))}
+                  </Select>
                 </Form.Item>
-                <Form.Item label="Resume Step Position" name="resumeStepPosition">
-                  <Input type="number" />
+
+                <Form.Item label="Resume Step Position" name="resumeStepPosition" rules={[{ required: true }]}>
+                  <Select placeholder="Select resume step">
+                    {steps.map((step, idx) => (
+                      <Option key={step.key} value={idx}>
+                        {`${idx + 1}. ${step.stepName}`}
+                      </Option>
+                    ))}
+                  </Select>
                 </Form.Item>
               </>
             )}
 
             <Form.Item label="Previous Step Position" name="previousStepPosition">
-              <Input type="number" />
+              <Select allowClear placeholder="Select previous step">
+                <Option value={null}>-- Start (Initial Step) --</Option>
+                {steps.map((step, idx) => (
+                  <Option key={step.key} value={idx}>
+                    {`${idx + 1}. ${step.stepName}`}
+                  </Option>
+                ))}
+              </Select>
             </Form.Item>
+
             <Form.Item label="Next Step Position" name="nextStepPosition">
-              <Input type="number" />
+              <Select allowClear placeholder="Select next step">
+                {steps.map((step, idx) => (
+                  <Option key={step.key} value={idx}>
+                    {`${idx + 1}. ${step.stepName}`}
+                  </Option>
+                ))}
+              </Select>
             </Form.Item>
 
             <Form.Item label="Requires User ID" name="requiresUserId" rules={[{ required: true }]}>
@@ -190,7 +257,7 @@ const Dashboard = () => {
               </Select>
             </Form.Item>
 
-            {stepForm.getFieldValue('approvalMode') === 'specific' && (
+            {selectedApprovalMode === 'specific' && (
               <Form.Item label="Specific User IDs" name="specificUserIds" rules={[{ required: true }]}>
                 <Input placeholder="Comma-separated user IDs" />
               </Form.Item>
@@ -203,9 +270,15 @@ const Dashboard = () => {
               </Select>
             </Form.Item>
 
-            <Form.Item label="Approval Count (for N of M)" name="approvalCount">
-              <Input type="number" min={1} />
-            </Form.Item>
+      {selectedApprovalMode === 'nofm' && (
+  <Form.Item
+    label="Approval Count (for N of M)"
+    name="approvalCount"
+    rules={[{ required: true, message: 'Approval count is required for N of M mode' }]}
+  >
+    <Input type="number" min={1} />
+  </Form.Item>
+)}
 
             <Form.Item>
               <Space>
@@ -241,6 +314,12 @@ const Dashboard = () => {
           }}
         />
       )}
+
+      <Divider />
+
+      <Button type="primary" onClick={handleSubmitWorkflow} block>
+        Submit Workflow
+      </Button>
     </Card>
   );
 };
