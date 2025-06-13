@@ -6,6 +6,7 @@ import {
   PlusOutlined,
   MenuOutlined
 } from '@ant-design/icons';
+import axios from 'axios';
 import { SortableContainer, SortableElement, sortableHandle } from 'react-sortable-hoc';
 import { arrayMoveImmutable as arrayMove } from 'array-move';
 
@@ -34,7 +35,6 @@ const Dashboard = () => {
     };
 
     const updatedSteps = [...steps];
-
     if (editingIndex !== null) {
       updatedSteps[editingIndex] = newStep;
     } else {
@@ -80,26 +80,69 @@ const Dashboard = () => {
     const index = steps.findIndex(x => x.key === restProps['data-row-key']);
     return <SortableItem index={index} {...restProps} />;
   };
+const handleSubmitWorkflow = async () => {
+  try {
+    const values = await form.validateFields();
 
-  const handleSubmitWorkflow = async () => {
-    try {
-      const values = await form.validateFields();
-      if (steps.length === 0) {
-        message.error("Please add at least one step to the workflow.");
-        return;
-      }
-
-      const workflow = {
-        ...values,
-        steps
-      };
-
-      console.log("Submitted Workflow:", workflow);
-      message.success("Workflow submitted successfully!");
-    } catch (errorInfo) {
-      console.error("Validation Failed:", errorInfo);
+    if (steps.length === 0) {
+      message.error("Please add at least one step to the workflow.");
+      return;
     }
-  };
+
+    const transformedSteps = steps.map((step, index) => ({
+      position: (index + 1).toString(),
+      step_user_role: step.userRole || '',
+      stepDescription: step.stepDescription || '',
+      requires_multiple_approvals: step.requires_multiple_approvals || 'false',
+      approver_mode: step.approvalMode || '',
+      execution_mode: step.executionMode || '',
+      approval_count_required: step.approval_count_required || '',
+      actions: step.action || [],
+      requires_user_id: step.requiresUserId || 'false',
+      is_user_id_dynamic: step.isUserIdDynamic || 'false',
+      targetStepPosition: step.targetStepPosition || '',
+      resumeStepPosition: step.resumeStepPosition || (index + 1).toString(),
+      nextStepPosition: index + 1 < steps.length ? (index + 2).toString() : '',
+      prevStepPosition: index === 0 ? '' : index.toString()
+    }));
+
+    const workflow = {
+      user: {
+        employee_id: "345412",
+        role: "employee"
+      },
+      parentWorkflowId: "",
+      workflowName: values.workflowName,
+      workflowDescription: values.workflowDescription,
+      workflow_steps: transformedSteps
+    };
+
+    const response = await axios.post(
+      'http://10.180.6.66/Workflow-Manager/public/index.php/api/workflow/create',
+      workflow,
+      {
+        headers: {
+          'Authorization': 'Bearer workflow_engine_ssdg',  // ✅ Correct token format
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      }
+    );
+
+    message.success("Workflow submitted successfully!");
+    console.log("API Response:", response.data);
+  } catch (error) {
+    if (error.response) {
+      console.error("API Error:", error.response.data);
+      message.error(`Submission failed: ${error.response.data.message || 'Unknown error'}`);
+    } else {
+      console.error("Error:", error.message);
+      message.error("Submission failed. Check the console for details.");
+    }
+  }
+};
+
+
 
   const columns = [
     {
@@ -263,22 +306,22 @@ const Dashboard = () => {
               </Form.Item>
             )}
 
+            {selectedApprovalMode === 'nofm' && (
+              <Form.Item
+                label="Approval Count (for N of M)"
+                name="approvalCount"
+                rules={[{ required: true, message: 'Approval count is required for N of M mode' }]}
+              >
+                <Input type="number" min={1} />
+              </Form.Item>
+            )}
+
             <Form.Item label="Execution Mode" name="executionMode" rules={[{ required: true }]}>
               <Select>
                 <Option value="parallel">Parallel</Option>
                 <Option value="sequence">Sequence</Option>
               </Select>
             </Form.Item>
-
-      {selectedApprovalMode === 'nofm' && (
-  <Form.Item
-    label="Approval Count (for N of M)"
-    name="approvalCount"
-    rules={[{ required: true, message: 'Approval count is required for N of M mode' }]}
-  >
-    <Input type="number" min={1} />
-  </Form.Item>
-)}
 
             <Form.Item>
               <Space>
