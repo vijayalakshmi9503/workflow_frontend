@@ -1,0 +1,9 @@
+/* Style.css */
+.react-flow__node {
+  font-size: 14px;
+  font-family: sans-serif;
+}
+
+.react-flow__panel {
+  z-index: 10;
+}
