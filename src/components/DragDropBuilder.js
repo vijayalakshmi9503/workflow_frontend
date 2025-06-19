@@ -265,7 +265,7 @@ const CustomEdge = ({
     </>
   );
 };
-function convertWorkflowToSteps(workflowName, workflowDesc, nodes, edges) {
+function converstWorkflowToSteps(workflowName, workflowDesc, nodes, edges) {
   const incoming = {};
   const outgoing = {};
 
@@ -314,6 +314,135 @@ function convertWorkflowToSteps(workflowName, workflowDesc, nodes, edges) {
   };
 }
 
+function convertWorkflowToSteps(workflowName, workflowDesc, nodes, edges) {
+  const incoming = {};
+  const outgoing = {};
+
+  edges.forEach(edge => {
+    if (!outgoing[edge.source]) outgoing[edge.source] = [];
+    if (!incoming[edge.target]) incoming[edge.target] = [];
+
+    outgoing[edge.source].push(edge);
+    incoming[edge.target].push(edge);
+  });
+const stripNodePrefix = (nodeId) => nodeId.replace('node-', '');
+  const workflow_steps = nodes
+    .filter(node => node.data?.label && !node.data?.isTransition)
+    .map(node => {
+      const formData = node.data.formData || {};
+      const outgoingEdges = outgoing[node.id] || [];
+      const incomingEdges = incoming[node.id] || [];
+
+      // Find revoke transition node connected to this node
+      const transitions = outgoing[node.id] || [];
+      const revokeTransition = transitions.find(e => {
+        const transitionNode = nodes.find(n => n.id === e.target && n.data?.isTransition);
+        return transitionNode?.data?.label?.toLowerCase() === 'revoke';
+      });
+
+      let targetStepPosition = '';
+      let resumeStepPosition = '';
+
+      if (revokeTransition) {
+        const revokeNodeId = revokeTransition.target;
+
+        // Find 2 outgoing edges from the "Revoke" node
+        const revokeEdges = outgoing[revokeNodeId] || [];
+
+       if (revokeEdges.length >= 2) {
+        targetStepPosition = stripNodePrefix(revokeEdges[0].target);
+        resumeStepPosition = stripNodePrefix(revokeEdges[1].target);
+      }
+      }
+
+      return {
+        position: node.id,
+        step_user_role: node.data.label.toLowerCase(),
+        stepDescription: formData.stepDescription || '',
+        requires_multiple_approvals: formData.approvalMode ? 'true' : 'false',
+        approver_mode: formData.approvalMode || '',
+        execution_mode: formData.executionMode || '',
+        approval_count_required: formData.approvalMode === 'any' ? '1' : '',
+        actions: outgoingEdges.map(e => e.data?.label?.toLowerCase() || 'submit'),
+        requires_user_id: formData.requiresUserId === 'yes' ? 'true' : 'false',
+        is_user_id_dynamic: formData.isUserIdDynamic === 'yes' ? 'true' : 'false',
+        targetStepPosition,
+        resumeStepPosition,
+        nextStepPosition: outgoingEdges[0]?.target || '',
+        prevStepPosition: incomingEdges[0]?.source || ''
+      };
+    });
+
+  return {
+    user: {
+      employee_id: "345412",
+      role: "employee"
+    },
+    parentWorkflowId: "",
+    workflowName,
+    workflowDescription: workflowDesc,
+    workflow_steps
+  };
+}
+
+function convertWaorkflowToSteps(workflowName, workflowDesc, nodes, edges) {
+  const incoming = {};
+  const outgoing = {};
+
+  edges.forEach(edge => {
+    if (!outgoing[edge.source]) outgoing[edge.source] = [];
+    if (!incoming[edge.target]) incoming[edge.target] = [];
+
+    outgoing[edge.source].push({
+      target: edge.target,
+      label: edge.data?.label,
+      targetStepPosition: edge.data?.targetStepPosition || '',
+      resumeStepPosition: edge.data?.resumeStepPosition || ''
+    });
+
+    incoming[edge.target].push({ source: edge.source });
+  });
+
+  const workflow_steps = nodes
+    .filter(node => node.data?.label && !node.data?.isTransition)
+    .map(node => {
+      const formData = node.data.formData || {};
+      const outgoingEdges = outgoing[node.id] || [];
+      const incomingEdges = incoming[node.id] || [];
+
+      // Find the revoke edge (if exists)
+      const revokeEdge = outgoingEdges.find(e => e.label?.toLowerCase() === 'revoke');
+
+      return {
+        position: node.id,
+        step_user_role: node.data.label.toLowerCase(),
+        stepDescription: formData.stepDescription || '',
+        requires_multiple_approvals: formData.approvalMode ? 'true' : 'false',
+        approver_mode: formData.approvalMode || '',
+        execution_mode: formData.executionMode || '',
+        approval_count_required: formData.approvalMode === 'any' ? '1' : '',
+        actions: outgoingEdges.map(e => e.label?.toLowerCase() || 'submit'),
+        requires_user_id: formData.requiresUserId === 'yes' ? 'true' : 'false',
+        is_user_id_dynamic: formData.isUserIdDynamic === 'yes' ? 'true' : 'false',
+        targetStepPosition: revokeEdge?.targetStepPosition || '',
+        resumeStepPosition: revokeEdge?.resumeStepPosition || node.id,
+        nextStepPosition: outgoingEdges[0]?.target || '',
+        prevStepPosition: incomingEdges[0]?.source || ''
+      };
+    });
+
+  return {
+    user: {
+      employee_id: "345412",
+      role: "employee"
+    },
+    parentWorkflowId: "",
+    workflowName,
+    workflowDescription: workflowDesc,
+    workflow_steps
+  };
+}
+
 const FlowCanvas = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -335,10 +464,35 @@ const [workflowDesc, setWorkflowDesc] = useState('');
   const [menuPosition, setMenuPosition] = useState(null);
   const [showForm, setShowForm] = useState(false);
 
-  const deleteNode = (id) => {
-    setNodes((nds) => nds.filter((n) => n.id !== id));
-    setEdges((eds) => eds.filter((e) => e.source !== id && e.target !== id));
-  };
+const deleteNode = (id) => {
+  setNodes((nds) => {
+    // Find all edges connected to the node
+    const connectedEdges = edges.filter(e => e.source === id || e.target === id);
+
+    // Get all transition node IDs connected to this node via outgoing edge
+    const transitionNodeIds = connectedEdges
+      .filter(e => e.source === id) // only outgoing transitions
+      .map(e => e.target);
+
+    // Filter out the node itself and its connected transition nodes
+    const remainingNodes = nds.filter(
+      n => n.id !== id && !transitionNodeIds.includes(n.id)
+    );
+
+    return remainingNodes;
+  });
+
+  setEdges((eds) => {
+    return eds.filter(
+      e =>
+        e.source !== id &&
+        e.target !== id &&
+        !edges.some(edge => edge.source === id && edge.target === e.source) && // transition edges
+        !edges.some(edge => edge.source === id && edge.target === e.target)
+    );
+  });
+};
+
 
   const renameNode = (id, newLabel) => {
     setNodes((prev) =>
@@ -426,20 +580,28 @@ const onNodeClick = (event, node) => {
     setCustomCount((prev) => prev + 1);
   };
 
-  const onEdgeClick = (event, edge) => {
-    event.stopPropagation();
-    const label = prompt(
-      'Enter transition: Approve / Reject / Revoke',
-      edge.data?.label || 'Approve'
-    );
-    if (label) {
-      setEdges((eds) =>
-        eds.map((e) =>
-          e.id === edge.id ? { ...e, data: { ...e.data, label } } : e
-        )
-      );
+const onEdgeClick = (event, edge) => {
+  event.stopPropagation();
+  const label = prompt(
+    'Enter transition: Approve / Reject / Revoke',
+    edge.data?.label || 'Approve'
+  );
+
+  if (label) {
+    const newData = { ...edge.data, label };
+
+    if (label.toLowerCase() === 'revoke') {
+      const targetStepPosition = prompt('Enter targetStepPosition', edge.data?.targetStepPosition || '');
+      const resumeStepPosition = prompt('Enter resumeStepPosition', edge.data?.resumeStepPosition || '');
+      newData.targetStepPosition = targetStepPosition;
+      newData.resumeStepPosition = resumeStepPosition;
     }
-  };
+
+    setEdges((eds) =>
+      eds.map((e) => (e.id === edge.id ? { ...e, data: newData } : e))
+    );
+  }
+};
 
   const saveFlowToJSON = () => {
     const flowData = {
@@ -566,6 +728,14 @@ const onNodeClick = (event, node) => {
             >
               🔁 Transition
             </button>
+             <button
+      onClick={() => {
+        deleteNode(menuPosition.nodeId);
+        setMenuPosition(null);
+      }}
+    >
+      🗑 Delete
+    </button>
             <button onClick={() => setMenuPosition(null)}>❌</button>
           </div>
         )}
