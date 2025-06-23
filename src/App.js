@@ -35,9 +35,10 @@ const AppLayout = ({ collapsed, setCollapsed, onLogout }) => {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/users" element={<Users />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/Login" element={<Login />} />
              <Route path="/dragdroppable"  element={<DragDropBuilder/>} />
           <Route path="*" element={<Navigate to="/dashboard" />} />
-         
+         <Route path="/edit-workflow/:id" element={<DragDropBuilder />} />
         </Routes>
       </div>
     </div>

@@ -9,7 +9,7 @@ import {
   Menu,
   Card,
   Modal,
-  Form,
+  message,
 } from 'antd';
 import {
   SearchOutlined,
@@ -23,20 +23,61 @@ import { saveAs } from 'file-saver';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import axios from 'axios';
-
-const initialData = [
-  { key: 1, name: 'Alice', status: 'Pending' },
-  { key: 2, name: 'Bob', status: 'Approved' },
-  { key: 3, name: 'Charlie', status: 'Rejected' },
-];
+import { useNavigate } from 'react-router-dom'; // 👈 Required for navigation
 
 const Users = () => {
-  const [data, setData] = useState(initialData);
+  const [data, setData] = useState([]);
   const [searchText, setSearchText] = useState('');
-  const [filteredData, setFilteredData] = useState(initialData);
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [editingRecord, setEditingRecord] = useState(null);
-  const [form] = Form.useForm();
+  const [filteredData, setFilteredData] = useState([]);
+  const navigate = useNavigate(); // 👈 Init navigation
+
+  const fetchWorkflow = async () => {
+    try {
+      const response = await axios.post(
+        'http://10.180.6.66/Workflow-Manager/public/index.php/api/workflow/get',
+        {
+          user: {
+            employee_id: '345412',
+            role: 'employee',
+          },
+          workflow_id_: 'Wf_529',
+        },
+        {
+          headers: {
+            Authorization: 'Bearer workflow_engine_ssdg',
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      const wf = response?.data?.data?.workflows;
+      if (!wf) {
+        return message.error('No workflow data found.');
+      }
+
+      const formatted = [
+        {
+          key: 1,
+          name: wf.workflowName,
+          status: 'Pending',
+          workflow_id: wf.workflow_id,
+          step_count: wf.step_count,
+          image: wf.image,
+        },
+      ];
+
+      setData(formatted);
+      setFilteredData(formatted);
+    } catch (error) {
+      console.error('Fetch Error:', error);
+      message.error('Failed to fetch workflow data.');
+    }
+  };
+
+  useEffect(() => {
+    fetchWorkflow();
+  }, []);
 
   useEffect(() => {
     const filtered = data.filter(item =>
@@ -45,32 +86,30 @@ const Users = () => {
     setFilteredData(filtered);
   }, [searchText, data]);
 
-  const handleRefresh = () => {
-    setData([...initialData]);
-  };
+  const handleRefresh = () => fetchWorkflow();
 
   const downloadExcel = () => {
     const ws = XLSX.utils.json_to_sheet(filteredData);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Settings');
+    XLSX.utils.book_append_sheet(wb, ws, 'Workflow');
     const buf = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
-    saveAs(new Blob([buf]), 'settings.xlsx');
+    saveAs(new Blob([buf]), 'workflow.xlsx');
   };
 
   const downloadCSV = () => {
     const ws = XLSX.utils.json_to_sheet(filteredData);
     const csv = XLSX.utils.sheet_to_csv(ws);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    saveAs(blob, 'settings.csv');
+    saveAs(blob, 'workflow.csv');
   };
 
   const downloadPDF = () => {
     const doc = new jsPDF();
     autoTable(doc, {
-      head: [['Name', 'Status']],
-      body: filteredData.map(item => [item.name, item.status]),
+      head: [['Name', 'Status', 'Workflow ID']],
+      body: filteredData.map(item => [item.name, item.status, item.workflow_id]),
     });
-    doc.save('settings.pdf');
+    doc.save('workflow.pdf');
   };
 
   const handleMenuClick = e => {
@@ -79,68 +118,50 @@ const Users = () => {
     else if (e.key === 'pdf') downloadPDF();
   };
 
-  const downloadMenu = (
-    <Menu onClick={handleMenuClick}>
-      <Menu.Item key="excel">Download Excel</Menu.Item>
-      <Menu.Item key="csv">Download CSV</Menu.Item>
-      <Menu.Item key="pdf">Download PDF</Menu.Item>
-    </Menu>
-  );
-
   const handleEdit = record => {
-    setEditingRecord(record);
-    form.setFieldsValue(record);
-    setIsModalVisible(true);
-  };
-
-const handleDelete = (key) => {
-  console.log('handleDelete called for key:', key);
-
-Modal.confirm({
-      title: 'Test Confirm',
-      onOk() {
-        console.log('Modal confirmed');
-      },
-      onCancel() {
-        console.log('Modal cancelled');
+    // 👇 Redirect to canvas/editor with state
+    navigate(`/edit-workflow/${record.workflow_id}`, {
+      state: {
+        workflowImage: record.image,
+        workflowName: record.name,
+        workflowId: record.workflow_id,
       },
     });
-};
+  };
 
-
-  const handleFormSubmit = () => {
-    form.validateFields().then(values => {
-      setData(prev =>
-        prev.map(item =>
-          item.key === editingRecord.key ? { ...item, ...values } : item
-        )
-      );
-      setIsModalVisible(false);
-      setEditingRecord(null);
-      form.resetFields();
+  const handleDelete = key => {
+    Modal.confirm({
+      title: 'Confirm Delete',
+      onOk() {
+        setData(prev => prev.filter(item => item.key !== key));
+        setFilteredData(prev => prev.filter(item => item.key !== key));
+      },
     });
   };
 
   const columns = [
+    {
+      title: 'Image',
+      dataIndex: 'image',
+      render: img =>
+        img ? <img src={img} alt="workflow" style={{ width: 40, height: 40 }} /> : '-',
+    },
     {
       title: 'Name',
       dataIndex: 'name',
       sorter: (a, b) => a.name.localeCompare(b.name),
     },
     {
+      title: 'Workflow ID',
+      dataIndex: 'workflow_id',
+    },
+    {
       title: 'Status',
       dataIndex: 'status',
-      filters: [
-        { text: 'Pending', value: 'Pending' },
-        { text: 'Approved', value: 'Approved' },
-        { text: 'Rejected', value: 'Rejected' },
-      ],
-      onFilter: (value, record) => record.status === value,
       render: status => {
-        let color = 'default';
+        let color = 'orange';
         if (status === 'Approved') color = 'green';
         else if (status === 'Rejected') color = 'red';
-        else if (status === 'Pending') color = 'orange';
         return <Tag color={color}>{status}</Tag>;
       },
     },
@@ -165,12 +186,20 @@ Modal.confirm({
     },
   ];
 
+  const downloadMenu = (
+    <Menu onClick={handleMenuClick}>
+      <Menu.Item key="excel">Download Excel</Menu.Item>
+      <Menu.Item key="csv">Download CSV</Menu.Item>
+      <Menu.Item key="pdf">Download PDF</Menu.Item>
+    </Menu>
+  );
+
   return (
     <div style={{ padding: 20 }}>
       <Card
         bordered
-        style={{ background: '#d2caca47' }}
-        title={<span style={{ fontSize: '20px', fontWeight: '500' }}>Admin Approvals</span>}
+        style={{ background: '#f5f5f5' }}
+        title={<span style={{ fontSize: '20px', fontWeight: '500' }}>Workflow Info</span>}
         extra={
           <Space wrap>
             <Input
@@ -198,26 +227,6 @@ Modal.confirm({
           rowKey="key"
         />
       </Card>
-
-      <Modal
-        title="Edit User"
-        open={isModalVisible}
-        onOk={handleFormSubmit}
-        onCancel={() => {
-          setIsModalVisible(false);
-          form.resetFields();
-        }}
-        okText="Update"
-      >
-        <Form layout="vertical" form={form}>
-          <Form.Item label="Name" name="name" rules={[{ required: true }]}>
-            <Input />
-          </Form.Item>
-          <Form.Item label="Status" name="status" rules={[{ required: true }]}>
-            <Input />
-          </Form.Item>
-        </Form>
-      </Modal>
     </div>
   );
 };

@@ -3,18 +3,19 @@ import { useNavigate } from 'react-router-dom';
 import './Login.css';
 
 function Login({ onLoginSuccess }) {
-  const [email, setEmail] = useState('');
+  const [employeeNo, setEmployeeNo] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
+  const [apiError, setApiError] = useState('');
   const navigate = useNavigate();
 
   const validate = () => {
     const newErrors = {};
 
-    if (!email) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = 'Email is invalid';
+    if (!employeeNo) {
+      newErrors.employeeNo = 'Employee Number is required';
+    } else if (!/^\d{5,}$/.test(employeeNo)) {
+      newErrors.employeeNo = 'Invalid Employee Number format';
     }
 
     if (!password) {
@@ -41,17 +42,35 @@ function Login({ onLoginSuccess }) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setApiError('');
+    
     if (validate()) {
-      // Call parent handler to enable sidebar
-      if (typeof onLoginSuccess === 'function') {
-        onLoginSuccess();
+      try {
+        const response = await fetch('http://10.180.5.64:8080/ldapcon/login.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ employeeNo, password }),
+        });
+  
+        const data = await response.json();
+  
+        if (data.success) {
+          if (typeof onLoginSuccess === 'function') {
+            onLoginSuccess(data.user); // Pass user info to parent
+          }
+          navigate('/dashboard');
+        } else {
+          setApiError(data.message || 'Login failed. Please check your credentials.');
+        }
+      } catch (err) {
+        console.error('Login error:', err);
+        setApiError('Server error. Please try again later.');
       }
-      navigate('/dashboard');
     }
   };
-
+  
   return (
     <div className="login-wrapper">
       <form className="login-form" onSubmit={handleSubmit}>
@@ -59,15 +78,15 @@ function Login({ onLoginSuccess }) {
         <p>Please log in to your account</p>
 
         <input
-          type="email"
-          placeholder="Email Address"
-          value={email}
+          type="text"
+          placeholder="Employee Number"
+          value={employeeNo}
           onChange={(e) => {
-            setEmail(e.target.value);
-            setErrors((prev) => ({ ...prev, email: '' }));
+            setEmployeeNo(e.target.value);
+            setErrors((prev) => ({ ...prev, employeeNo: '' }));
           }}
         />
-        {errors.email && <p className="error">{errors.email}</p>}
+        {errors.employeeNo && <p className="error">{errors.employeeNo}</p>}
 
         <input
           type="password"
@@ -79,6 +98,8 @@ function Login({ onLoginSuccess }) {
           }}
         />
         {errors.password && <p className="error">{errors.password}</p>}
+
+        {apiError && <p className="error">{apiError}</p>}
 
         <button type="submit">Login</button>
       </form>

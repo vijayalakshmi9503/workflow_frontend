@@ -16,13 +16,36 @@ import {
   getStraightPath,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
+import html2canvas from 'html2canvas';
 
 import { Card, Form, Input, Select, Button, Space } from 'antd';
 
 const { Option } = Select;
 const Sidebar = ({ items, onDragStart, onAddCustom }) => (
-  <div style={{ width: 200, padding: 10, background: '#f4f4f4', borderRight: '1px solid #ccc' }}>
-    <h4>Drag Components</h4>
+  <div style={{ width: 200, padding: 10,boxShadow:" rgba(0, 0, 0, 0.12) 0px 6px 10px, rgba(0, 0, 0, 0.12) 0px 1px 18px,rgba(0, 0, 16, 0.15) 0 3px 5px", borderRight: '1px solid #ccc' }}>
+    <h4 style={{    color: "#3b2a94",
+    fontSize: "15px",
+    textAlign: "center",
+}}>Drag Components</h4>
+<div style={{display : "flex", justifyContent : "center"}}>
+
+
+
+<button onClick={onAddCustom} style={{
+  background : "#91caff",
+color: "white",
+borderRadius: "5px",
+outline: 0,
+border: 0,
+padding
+: "10px 10px",
+
+textTransform: "uppercase",
+margin: "10px 0px",
+cursor: "pointer",
+boxShadow:" 0px 2px 2px lightgray",
+transition: "ease background-color 250ms"}}>＋ Add Custom</button>
+</div>
     {items.map((item) => (
       <div
         key={item.id}
@@ -33,6 +56,7 @@ const Sidebar = ({ items, onDragStart, onAddCustom }) => (
           marginBottom: 10,
           background: '#fff',
           border: '1px solid #aaa',
+          boxShadow:" 0 3px 10px rgb(0 0 0 / 0.2)",
           borderRadius: 4,
           cursor: 'grab',
         }}
@@ -40,8 +64,10 @@ const Sidebar = ({ items, onDragStart, onAddCustom }) => (
         {item.label}
       </div>
     ))}
-    <button onClick={onAddCustom} style={{ marginTop: 20 }}>＋ Add Custom</button>
-  </div>
+
+
+  
+</div>
 );
 
 const CustomNode = ({ data, id }) => {
@@ -64,10 +90,13 @@ const CustomNode = ({ data, id }) => {
     borderBottomLeftRadius: 25,
     borderBottomRightRadius: 25,
   }),
-      
+  // borderTopLeftRadius: "5px",
+  // borderTopRightRadius: "5px",
+  // borderBottomLeftRadius: "5px",
+  // borderBottomRightRadius: "5px",
       
         textAlign: 'center',
-        border: '1px solid #aaa',
+        border: '1px solid rgb(234 192 192)',
         cursor: 'pointer',
         position: 'relative',
         display: 'flex',
@@ -265,54 +294,19 @@ const CustomEdge = ({
     </>
   );
 };
-function converstWorkflowToSteps(workflowName, workflowDesc, nodes, edges) {
-  const incoming = {};
-  const outgoing = {};
 
-  edges.forEach(edge => {
-    if (!outgoing[edge.source]) outgoing[edge.source] = [];
-    if (!incoming[edge.target]) incoming[edge.target] = [];
+const exportCanvasImage = async () => {
+  const flowCanvas = document.querySelector('.react-flow__viewport');
+  if (!flowCanvas) return null;
 
-    outgoing[edge.source].push({ target: edge.target, label: edge.data?.label });
-    incoming[edge.target].push({ source: edge.source });
+  const canvas = await html2canvas(flowCanvas, {
+    useCORS: true,         // In case of external images
+    backgroundColor: null  // Keeps background transparent
   });
 
-  const workflow_steps = nodes
-    .filter(node => node.data?.label && !node.data?.isTransition)
-    .map(node => {
-      const formData = node.data.formData || {};
-      const outgoingEdges = outgoing[node.id] || [];
-      const incomingEdges = incoming[node.id] || [];
-
-      return {
-        position: node.id,
-        step_user_role: node.data.label.toLowerCase(),
-        stepDescription: formData.stepDescription || '',
-        requires_multiple_approvals: formData.approvalMode ? 'true' : 'false',
-        approver_mode: formData.approvalMode || '',
-        execution_mode: formData.executionMode || '',
-        approval_count_required: formData.approvalMode === 'any' ? '1' : '',
-        actions: outgoingEdges.map(e => e.label?.toLowerCase() || 'submit'),
-        requires_user_id: formData.requiresUserId === 'yes' ? 'true' : 'false',
-        is_user_id_dynamic: formData.isUserIdDynamic === 'yes' ? 'true' : 'false',
-        targetStepPosition: '',
-        resumeStepPosition: node.id,
-        nextStepPosition: outgoingEdges[0]?.target || '',
-        prevStepPosition: incomingEdges[0]?.source || ''
-      };
-    });
-
-  return {
-    user: {
-      employee_id: "345412",
-      role: "employee"
-    },
-    parentWorkflowId: "",
-    workflowName,
-    workflowDescription: workflowDesc,
-    workflow_steps
-  };
-}
+  const imageBase64 = canvas.toDataURL('image/png'); // Base64 image
+  return imageBase64;
+};
 
 function convertWorkflowToSteps(workflowName, workflowDesc, nodes, edges) {
   const incoming = {};
@@ -325,7 +319,9 @@ function convertWorkflowToSteps(workflowName, workflowDesc, nodes, edges) {
     outgoing[edge.source].push(edge);
     incoming[edge.target].push(edge);
   });
-const stripNodePrefix = (nodeId) => nodeId.replace('node-', '');
+
+  const stripNodePrefix = (nodeId) => nodeId.replace('node-', '');
+
   const workflow_steps = nodes
     .filter(node => node.data?.label && !node.data?.isTransition)
     .map(node => {
@@ -333,7 +329,6 @@ const stripNodePrefix = (nodeId) => nodeId.replace('node-', '');
       const outgoingEdges = outgoing[node.id] || [];
       const incomingEdges = incoming[node.id] || [];
 
-      // Find revoke transition node connected to this node
       const transitions = outgoing[node.id] || [];
       const revokeTransition = transitions.find(e => {
         const transitionNode = nodes.find(n => n.id === e.target && n.data?.isTransition);
@@ -345,14 +340,12 @@ const stripNodePrefix = (nodeId) => nodeId.replace('node-', '');
 
       if (revokeTransition) {
         const revokeNodeId = revokeTransition.target;
-
-        // Find 2 outgoing edges from the "Revoke" node
         const revokeEdges = outgoing[revokeNodeId] || [];
 
-       if (revokeEdges.length >= 2) {
-        targetStepPosition = stripNodePrefix(revokeEdges[0].target);
-        resumeStepPosition = stripNodePrefix(revokeEdges[1].target);
-      }
+        if (revokeEdges.length >= 2) {
+          targetStepPosition = stripNodePrefix(revokeEdges[0].target);
+          resumeStepPosition = stripNodePrefix(revokeEdges[1].target);
+        }
       }
 
       return {
@@ -381,65 +374,9 @@ const stripNodePrefix = (nodeId) => nodeId.replace('node-', '');
     parentWorkflowId: "",
     workflowName,
     workflowDescription: workflowDesc,
-    workflow_steps
-  };
-}
-
-function convertWaorkflowToSteps(workflowName, workflowDesc, nodes, edges) {
-  const incoming = {};
-  const outgoing = {};
-
-  edges.forEach(edge => {
-    if (!outgoing[edge.source]) outgoing[edge.source] = [];
-    if (!incoming[edge.target]) incoming[edge.target] = [];
-
-    outgoing[edge.source].push({
-      target: edge.target,
-      label: edge.data?.label,
-      targetStepPosition: edge.data?.targetStepPosition || '',
-      resumeStepPosition: edge.data?.resumeStepPosition || ''
-    });
-
-    incoming[edge.target].push({ source: edge.source });
-  });
-
-  const workflow_steps = nodes
-    .filter(node => node.data?.label && !node.data?.isTransition)
-    .map(node => {
-      const formData = node.data.formData || {};
-      const outgoingEdges = outgoing[node.id] || [];
-      const incomingEdges = incoming[node.id] || [];
-
-      // Find the revoke edge (if exists)
-      const revokeEdge = outgoingEdges.find(e => e.label?.toLowerCase() === 'revoke');
-
-      return {
-        position: node.id,
-        step_user_role: node.data.label.toLowerCase(),
-        stepDescription: formData.stepDescription || '',
-        requires_multiple_approvals: formData.approvalMode ? 'true' : 'false',
-        approver_mode: formData.approvalMode || '',
-        execution_mode: formData.executionMode || '',
-        approval_count_required: formData.approvalMode === 'any' ? '1' : '',
-        actions: outgoingEdges.map(e => e.label?.toLowerCase() || 'submit'),
-        requires_user_id: formData.requiresUserId === 'yes' ? 'true' : 'false',
-        is_user_id_dynamic: formData.isUserIdDynamic === 'yes' ? 'true' : 'false',
-        targetStepPosition: revokeEdge?.targetStepPosition || '',
-        resumeStepPosition: revokeEdge?.resumeStepPosition || node.id,
-        nextStepPosition: outgoingEdges[0]?.target || '',
-        prevStepPosition: incomingEdges[0]?.source || ''
-      };
-    });
-
-  return {
-    user: {
-      employee_id: "345412",
-      role: "employee"
-    },
-    parentWorkflowId: "",
-    workflowName,
-    workflowDescription: workflowDesc,
-    workflow_steps
+    workflow_steps,
+    nodes, // 👈 Include original nodes
+    edges  // 👈 Include original edges
   };
 }
 
@@ -684,8 +621,12 @@ const onEdgeClick = (event, edge) => {
               boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
             }}
           >
-            <button onClick={() => setShowForm(true)}>📝 Form</button>
-            <button
+            <button style={{      background:" #a4add9",
+    border: "1px solid #9face6",
+    padding: "5px"}}onClick={() => setShowForm(true)}>📝 Form</button>
+            <button style={{      background:" rgb(214 34 166 / 37%)",
+    border: "1px solid rgb(240 174 222)",
+    padding: "5px"}}
               onClick={() => {
                 const node = nodes.find((n) => n.id === menuPosition.nodeId);
                 if (!node) return;
@@ -728,7 +669,9 @@ const onEdgeClick = (event, edge) => {
             >
               🔁 Transition
             </button>
-             <button
+             <button style={{      background:"rgb(216 16 40 / 56%)",
+    border: "1px solid rgb(233 121 134)",
+    padding: "5px"}}
       onClick={() => {
         deleteNode(menuPosition.nodeId);
         setMenuPosition(null);
@@ -736,7 +679,9 @@ const onEdgeClick = (event, edge) => {
     >
       🗑 Delete
     </button>
-            <button onClick={() => setMenuPosition(null)}>❌</button>
+            <button  style={{      background:"rgb(211 194 90 / 52%)",
+    border: "1px solid rgb(232 223 169)",
+    padding: "5px"}} onClick={() => setMenuPosition(null)}>❌</button>
           </div>
         )}
 
@@ -807,8 +752,13 @@ const onEdgeClick = (event, edge) => {
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
         <button onClick={() => setShowSaveModal(false)}>Cancel</button>
     <button
-  onClick={async () => {
-    const flowData = convertWorkflowToSteps(workflowName, workflowDesc, nodes, edges);
+ onClick={async () => {
+     const image = await exportCanvasImage();  // ✅ Capture canvas image
+
+   const flowData = {
+    ...convertWorkflowToSteps(workflowName, workflowDesc, nodes, edges),
+    image   // ✅ Include the image in the payload
+  };
 
     // 🔽 1. Hit the API
     try {

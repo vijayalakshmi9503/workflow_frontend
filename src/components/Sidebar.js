@@ -9,6 +9,7 @@ const Sidebar = ({ collapsed, toggleSidebar }) => {
     { name: 'My Request', icon: <FaUserFriends />, path: '/users' },
     { name: 'Approvals', icon: <FaCog />, path: '/settings' },
      { name: 'Dragabble', icon: <FaCog />, path: '/dragdroppable' },
+     { name: 'Login', icon: <FaCog />, path: '/login' },
   ];
 
   return (
