@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from 'react';
+
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -23,8 +24,7 @@ import { Card, Form, Input, Select, Button, Space } from 'antd';
 const { Option } = Select;
 const Sidebar = ({ items, onDragStart, onAddCustom }) => (
   <div style={{ width: 200, padding: 10,boxShadow:" rgba(0, 0, 0, 0.12) 0px 6px 10px, rgba(0, 0, 0, 0.12) 0px 1px 18px,rgba(0, 0, 16, 0.15) 0 3px 5px", borderRight: '1px solid #ccc' }}>
-    <h4 style={{    color: "#3b2a94",
-    fontSize: "15px",
+    <h4 style={{    fontSize: "15px",
     textAlign: "center",
 }}>Drag Components</h4>
 <div style={{display : "flex", justifyContent : "center"}}>
@@ -393,7 +393,7 @@ const [workflowDesc, setWorkflowDesc] = useState('');
     { id: 'EMPLOYEE', label: 'Employee' },
     { id: 'fla', label: 'FLA' },
     { id: 'sla', label: 'SLA' },
-    { id: 'cla', label: 'CLA' },
+    { id: 'admin', label: 'Admin' },
     { id: 'xyz', label: 'XYZ' },
   ]);
 
@@ -606,83 +606,171 @@ const onEdgeClick = (event, edge) => {
         </ReactFlow>
 
         {menuPosition && (
-          <div
-            style={{
-              position: 'absolute',
-              top: menuPosition.y,
-              left: menuPosition.x,
-              zIndex: 1000,
-              background: '#fff',
-              border: '1px solid #aaa',
-              borderRadius: 5,
-              padding: '5px 10px',
-              display: 'flex',
-              gap: 10,
-              boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
-            }}
-          >
-            <button style={{      background:" #a4add9",
-    border: "1px solid #9face6",
-    padding: "5px"}}onClick={() => setShowForm(true)}>📝 Form</button>
-            <button style={{      background:" rgb(214 34 166 / 37%)",
-    border: "1px solid rgb(240 174 222)",
-    padding: "5px"}}
-              onClick={() => {
-                const node = nodes.find((n) => n.id === menuPosition.nodeId);
-                if (!node) return;
-                const action = prompt('Enter transition action', 'Approve');
-                if (!action) return;
+    //       <div
+    //         style={{
+    //           position: 'absolute',
+    //           top: menuPosition.y,
+    //           left: menuPosition.x,
+    //           zIndex: 1000,
+    //           background: '#fff',
+    //           border: '1px solid #aaa',
+    //           borderRadius: 5,
+    //           padding: '5px 10px',
+    //           display: 'flex',
+    //           gap: 10,
+    //           boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+    //         }}
+    //       >
+    //         <button style={{      background:" #a4add9",
+    // border: "1px solid #9face6",
+    // padding: "5px"}}onClick={() => setShowForm(true)}>📝 Form</button>
+    //         <button style={{      background:" rgb(214 34 166 / 37%)",
+    // border: "1px solid rgb(240 174 222)",
+    // padding: "5px"}}
+    //           onClick={() => {
+    //             const node = nodes.find((n) => n.id === menuPosition.nodeId);
+    //             if (!node) return;
+    //             const action = prompt('Enter transition action', 'Approve');
+    //             if (!action) return;
 
-                const transitionNodeId = `node-${nodeId}`;
-                const offsetX = Math.floor(Math.random() * 120) - 60;
+    //             const transitionNodeId = `node-${nodeId}`;
+    //             const offsetX = Math.floor(Math.random() * 120) - 60;
 
-                const transitionNode = {
-                  id: transitionNodeId,
-                  type: 'customNode',
-                  position: {
-                    x: node.position.x + offsetX,
-                    y: node.position.y + 120,
-                  },
-                  data: {
-                    label: action,
-                    onDelete: deleteNode,
-                    onRename: renameNode,
-                    isTransition: true,
-                  },
-                };
+    //             const transitionNode = {
+    //               id: transitionNodeId,
+    //               type: 'customNode',
+    //               position: {
+    //                 x: node.position.x + offsetX,
+    //                 y: node.position.y + 120,
+    //               },
+    //               data: {
+    //                 label: action,
+    //                 onDelete: deleteNode,
+    //                 onRename: renameNode,
+    //                 isTransition: true,
+    //               },
+    //             };
 
-                const transitionEdge = {
-                  id: `edge-${node.id}-${transitionNodeId}`,
-                  source: node.id,
-                  target: transitionNodeId,
-                  type: 'customEdge',
-                  data: { label: action, shape: 'step' },
-                  markerEnd: { type: MarkerType.Arrow },
-                  style: { stroke: '#000' },
-                };
+    //             const transitionEdge = {
+    //               id: `edge-${node.id}-${transitionNodeId}`,
+    //               source: node.id,
+    //               target: transitionNodeId,
+    //               type: 'customEdge',
+    //               data: { label: action, shape: 'step' },
+    //               markerEnd: { type: MarkerType.Arrow },
+    //               style: { stroke: '#000' },
+    //             };
 
-                setNodes((nds) => [...nds, transitionNode]);
-                setEdges((eds) => [...eds, transitionEdge]);
-                setNodeId((id) => id + 1);
-                setMenuPosition(null);
-              }}
-            >
-              🔁 Transition
-            </button>
-             <button style={{      background:"rgb(216 16 40 / 56%)",
-    border: "1px solid rgb(233 121 134)",
-    padding: "5px"}}
-      onClick={() => {
-        deleteNode(menuPosition.nodeId);
-        setMenuPosition(null);
-      }}
-    >
-      🗑 Delete
-    </button>
-            <button  style={{      background:"rgb(211 194 90 / 52%)",
-    border: "1px solid rgb(232 223 169)",
-    padding: "5px"}} onClick={() => setMenuPosition(null)}>❌</button>
-          </div>
+    //             setNodes((nds) => [...nds, transitionNode]);
+    //             setEdges((eds) => [...eds, transitionEdge]);
+    //             setNodeId((id) => id + 1);
+    //             setMenuPosition(null);
+    //           }}
+    //         >
+    //           🔁 Transition
+    //         </button>
+    //          <button style={{      background:"rgb(216 16 40 / 56%)",
+    // border: "1px solid rgb(233 121 134)",
+    // padding: "5px"}}
+    //   onClick={() => {
+    //     deleteNode(menuPosition.nodeId);
+    //     setMenuPosition(null);
+    //   }}
+    // >
+    //   🗑 Delete
+    // </button>
+    //         <button  style={{      background:"rgb(211 194 90 / 52%)",
+    // border: "1px solid rgb(232 223 169)",
+    // padding: "5px"}} onClick={() => setMenuPosition(null)}>❌</button>
+    //       </div>
+
+    <div
+  style={{
+    position: 'absolute',
+    top: menuPosition.y - 70, // move it above the node
+    left: menuPosition.x - 40, // slightly center-align
+    zIndex: 1000,
+    background: '#fff',
+    border: '1px solid #aaa',
+    borderRadius: 5,
+    // padding: '8px 10px',
+    display: 'flex',
+    // gap: 8,
+    boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+  }}
+>
+ {/* Form Button */}
+ <button className="tooltip-button" onClick={() => setShowForm(true)}>
+    📝
+    <span className="tooltip-text">Open Form</span>
+  </button>
+
+  {/* Transition Button */}
+  <button
+    className="tooltip-button"
+    onClick={() => {
+      const node = nodes.find((n) => n.id === menuPosition.nodeId);
+      if (!node) return;
+      const action = prompt('Enter transition action', 'Approve');
+      if (!action) return;
+
+      const transitionNodeId = `node-${nodeId}`;
+      const offsetX = Math.floor(Math.random() * 120) - 60;
+
+      const transitionNode = {
+        id: transitionNodeId,
+        type: 'customNode',
+        position: {
+          x: node.position.x + offsetX,
+          y: node.position.y + 120,
+        },
+        data: {
+          label: action,
+          onDelete: deleteNode,
+          onRename: renameNode,
+          isTransition: true,
+        },
+      };
+
+      const transitionEdge = {
+        id: `edge-${node.id}-${transitionNodeId}`,
+        source: node.id,
+        target: transitionNodeId,
+        type: 'customEdge',
+        data: { label: action, shape: 'step' },
+        markerEnd: { type: MarkerType.Arrow },
+        style: { stroke: '#000' },
+      };
+
+      setNodes((nds) => [...nds, transitionNode]);
+      setEdges((eds) => [...eds, transitionEdge]);
+      setNodeId((id) => id + 1);
+      setMenuPosition(null);
+    }}
+  >
+    🔁
+    <span className="tooltip-text">Add Transition</span>
+  </button>
+
+  {/* Delete Button */}
+  <button
+    className="tooltip-button"
+    onClick={() => {
+      deleteNode(menuPosition.nodeId);
+      setMenuPosition(null);
+    }}
+  >
+    🗑
+    <span className="tooltip-text">Delete Node</span>
+  </button>
+
+  {/* Close Button */}
+  <button className="tooltip-button" onClick={() => setMenuPosition(null)}>
+    ❌
+    <span className="tooltip-text">Close Menu</span>
+  </button>
+</div>
+
         )}
 
         {activeNode && showForm && (

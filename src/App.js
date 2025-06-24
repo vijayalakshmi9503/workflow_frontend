@@ -8,6 +8,7 @@ import Login from './Login';
 import { FaBars } from 'react-icons/fa';
 import './components/Sidebar.css';
 import 'antd/dist/reset.css';
+import '../src/App.css'
 import DragDropBuilder from './components/DragDropBuilder'; // adjust path as needed
 
 const AppLayout = ({ collapsed, setCollapsed, onLogout }) => {

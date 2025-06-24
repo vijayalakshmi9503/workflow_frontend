@@ -1,0 +1,46 @@
+[2025-06-20 08:49:26] Incoming request
+Raw Input: 
+Missing credentials
+[2025-06-20 08:49:27] Incoming request
+Raw Input: 
+Missing credentials
+[2025-06-20 08:54:16] Incoming request
+Raw Input: 
+Missing credentials
+[2025-06-20 08:54:17] Incoming request
+Raw Input: {"employeeNo":"345871","password":"Hanuman1010@@##$$"}
+Connecting to 10.180.0.21:389
+Binding with DN: uid=345871,ou=People,dc=bl,ou=User,dc=cdac,dc=in
+LDAP bind successful
+[2025-06-20 08:54:37] Incoming request
+Raw Input: 
+Missing credentials
+[2025-06-20 08:54:37] Incoming request
+Raw Input: {"employeeNo":"345799","password":"Positive+@123"}
+Connecting to 10.180.0.21:389
+Binding with DN: uid=345799,ou=People,dc=bl,ou=User,dc=cdac,dc=in
+LDAP bind successful
+[2025-06-20 10:19:18] Incoming request
+Raw Input: 
+Missing credentials
+[2025-06-20 10:19:18] Incoming request
+Raw Input: {"employeeNo":"347872","password":"Nitesh$Kumar@2341"}
+Connecting to 10.180.0.21:389
+Binding with DN: uid=347872,ou=People,dc=bl,ou=User,dc=cdac,dc=in
+LDAP bind successful
+[2025-06-20 10:19:37] Incoming request
+Raw Input: 
+Missing credentials
+[2025-06-20 10:19:37] Incoming request
+Raw Input: {"employeeNo":"347872","password":"Nitesh$Kumar@2341"}
+Connecting to 10.180.0.21:389
+Binding with DN: uid=347872,ou=People,dc=bl,ou=User,dc=cdac,dc=in
+LDAP bind successful
+[2025-06-20 10:20:24] Incoming request
+Raw Input: 
+Missing credentials
+[2025-06-20 10:20:24] Incoming request
+Raw Input: {"employeeNo":"347872","password":"Nitesh$Kumar@2341"}
+Connecting to 10.180.0.21:389
+Binding with DN: uid=347872,ou=People,dc=bl,ou=User,dc=cdac,dc=in
+LDAP bind successful
