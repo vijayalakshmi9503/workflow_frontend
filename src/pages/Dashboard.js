@@ -458,7 +458,7 @@ const Dashboard = () => {
       };
 
       const response = await axios.post(
-        'http://10.180.6.66/Workflow-Manager/public/index.php/api/workflow/create',
+        `${API_BASE_URL}api/workflow/create`,
         workflow,
         {
           headers: {
