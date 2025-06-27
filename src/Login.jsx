@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Login.css';
+import API_BASE_URL from './apiConfig'; 
 
 function Login({ onLoginSuccess }) {
   const [employeeNo, setEmployeeNo] = useState('');
@@ -14,7 +15,7 @@ function Login({ onLoginSuccess }) {
 
     if (!employeeNo) {
       newErrors.employeeNo = 'Employee Number is required';
-    } else if (!/^\d{5,}$/.test(employeeNo)) {
+    } else if (!/^\d{5,}$/.test(employeeNo)) { 
       newErrors.employeeNo = 'Invalid Employee Number format';
     }
 
@@ -48,17 +49,18 @@ function Login({ onLoginSuccess }) {
     
     if (validate()) {
       try {
-        const response = await fetch('http://10.180.5.64:8080/ldapcon/login.php', {
+        const response = await fetch(`${API_BASE_URL}/api/ldap/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ employeeNo, password }),
         });
   
         const data = await response.json();
-  
-        if (data.success) {
+        
+        if (data.status === 'success') {
           if (typeof onLoginSuccess === 'function') {
             onLoginSuccess(data.user); // Pass user info to parent
+            console.log('Login successful:', data);
           }
           navigate('/dashboard');
         } else {

@@ -23,12 +23,12 @@ if (!$employeeNo || !$password) {
 }
 
 // LDAP connection info
-$ldap_host = '10.180.0.21';
-$ldap_port = 389;
-$ldap_dn = "uid=$employeeNo,ou=People,dc=bl,ou=User,dc=cdac,dc=in";
+$ldap_host = '';
+$ldap_port = '';
+$ldap_dn = " ";
 
 file_put_contents($logFile, "Connecting to $ldap_host:$ldap_port\n", FILE_APPEND);
-$ldap_conn = ldap_connect($ldap_host, $ldap_port);
+$ldap_conn = ldap_connect($ldap_host, $ldap_port); 
 
 if (!$ldap_conn) {
     file_put_contents($logFile, "LDAP connection failed\n", FILE_APPEND);
