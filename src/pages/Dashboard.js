@@ -376,6 +376,7 @@ import {
   PlusOutlined
 } from '@ant-design/icons';
 import axios from 'axios';
+import API_CONFIG from '../config/apiConfig';  // Adjust path if needed
 
 const { Option } = Select;
 
@@ -458,7 +459,8 @@ const Dashboard = () => {
       };
 
       const response = await axios.post(
-        `${API_BASE_URL}api/workflow/create`,
+        `${API_CONFIG.BASE_URL
+        }api/workflow/create`,
         workflow,
         {
           headers: {

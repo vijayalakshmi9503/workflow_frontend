@@ -1,27 +1,37 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { FaBars, FaHome, FaUserFriends, FaCog } from 'react-icons/fa';
+import {
+  FaHome,
+  FaUserFriends,
+  FaCheckCircle,
+  FaProjectDiagram,
+  FaSignInAlt,
+} from 'react-icons/fa';
 import './Sidebar.css';
 
-const Sidebar = ({ collapsed, toggleSidebar }) => {
+const Sidebar = ({ collapsed }) => {
   const menuItems = [
     { name: 'New Request', icon: <FaHome />, path: '/dashboard' },
     { name: 'My Request', icon: <FaUserFriends />, path: '/users' },
-    { name: 'Approvals', icon: <FaCog />, path: '/settings' },
-     { name: 'Dragabble', icon: <FaCog />, path: '/dragdroppable' },
-     { name: 'Login', icon: <FaCog />, path: '/login' },
+    { name: 'Approvals', icon: <FaCheckCircle />, path: '/approvals' },
+    { name: 'Workflow Builder', icon: <FaProjectDiagram />, path: '/dragdroppable' },
+    { name: 'Login', icon: <FaSignInAlt />, path: '/login' }, 
   ];
 
   return (
     <div className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
+      {/* Logo Section */}
       <div className="sidebar-header">
-        <img src="/cdac.jpg" alt="Logo" className="logo" />
+        <img src="/cdac.jpg" alt="CDAC Logo" className="logo" />
         {!collapsed && <div className="logo-text">Workflow Engine</div>}
       </div>
+
       <div className="sidebar-divider" />
+
+      {/* Navigation Menu */}
       <ul className="menu">
-        {menuItems.map((item, i) => (
-          <li key={i}>
+        {menuItems.map((item, index) => (
+          <li key={index}>
             <NavLink
               to={item.path}
               className={({ isActive }) =>
