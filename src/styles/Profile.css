@@ -1,0 +1,11 @@
+.profile-page {
+    padding: 2rem;
+  }
+  
+  .profile-details {
+    background: #f9f9f9;
+    padding: 1rem 2rem;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  }
+  

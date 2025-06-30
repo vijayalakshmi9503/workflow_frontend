@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom'; // <-- ADD useLocation
 import '../styles/Login.css';
 import { loginUser } from '../api/auth';
 import { validateLoginForm } from '../utils/validations/loginValidation';
@@ -11,8 +11,12 @@ function Login() {
   const [errors, setErrors] = useState({});
   const [apiError, setApiError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
   const navigate = useNavigate();
+  const location = useLocation(); // <-- ADD THIS
   const { login } = useAuth();
+
+  const from = location.state?.from?.pathname || '/dashboard'; // fallback if no prior path
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,7 +24,6 @@ function Login() {
 
     const { isValid, validationErrors } = validateLoginForm(employeeNo, password);
     setErrors(validationErrors);
-
     if (!isValid) return;
 
     setIsLoading(true);
@@ -28,8 +31,8 @@ function Login() {
       const response = await loginUser({ employeeNo, password });
 
       if (response.status === 'success' && response.data?.user) {
-        login(response.data.user); // Save user in context/localStorage
-        navigate('/dashboard');   // Redirect
+        login(response.data.user);
+        navigate(from, { replace: true }); // <-- GO BACK TO PREVIOUS ROUTE
       } else {
         setApiError(response.data?.message || 'Login failed. Please check your credentials.');
       }

@@ -4,6 +4,7 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true); // <- Added loading state
 
   useEffect(() => {
     try {
@@ -13,7 +14,9 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('Failed to parse user from localStorage:', error);
-      localStorage.removeItem('user'); // clean up invalid data
+      localStorage.removeItem('user');
+    } finally {
+      setLoading(false); // <- Mark auth state as initialized
     }
   }, []);
 
@@ -34,11 +37,10 @@ export const AuthProvider = ({ children }) => {
   const isAuthenticated = !!user;
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated }}>
+    <AuthContext.Provider value={{ user, login, logout, isAuthenticated, loading }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-// Custom hook to use auth context
 export const useAuth = () => useContext(AuthContext);
