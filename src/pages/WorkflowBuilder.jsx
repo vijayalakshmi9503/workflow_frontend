@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Card, Divider, Button, Form, message } from 'antd';
+import { Card, Divider, Button, Form, message, Input } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 
 import StepForm from '../components/workflow/StepForm';
 import StepTable from '../components/workflow/StepTable';
 import { transformSteps } from '../utils/workflowHelpers';
 import { submitWorkflow } from '../api/workflows';
+import { useAuth } from '../contexts/AuthContext'; // ✅ import auth context
 
 const WorkflowBuilder = () => {
   const [form] = Form.useForm();
@@ -13,6 +14,8 @@ const WorkflowBuilder = () => {
   const [steps, setSteps] = useState([]);
   const [showStepForm, setShowStepForm] = useState(false);
   const [editingIndex, setEditingIndex] = useState(null);
+
+  const { user } = useAuth(); //get the logged-in user from context
 
   const handleAddStep = (values) => {
     const newStep = { ...values, key: Date.now() };
@@ -52,7 +55,10 @@ const WorkflowBuilder = () => {
       }
 
       const payload = {
-        user: { employee_id: '345412', role: 'employee' },
+        user: {
+          employee_id: user?.employeeNo || '', 
+          role: user?.role || 'employee',
+        },
         parentWorkflowId: '',
         workflowName: values.workflowName,
         workflowDescription: values.workflowDescription,
@@ -71,12 +77,13 @@ const WorkflowBuilder = () => {
       title="Workflow Builder"
       style={{ width: '90%', margin: '20px auto', background: '#f5f5f5' }}
     >
-      <Form layout="vertical" form={form}>
+      <Form layout="vertical" form={form}>   
         <Form.Item label="Workflow Name" name="workflowName" rules={[{ required: true }]}>
-          <input />
+          <Input placeholder="Enter workflow name" />
         </Form.Item>
+
         <Form.Item label="Workflow Description" name="workflowDescription" rules={[{ required: true }]}>
-          <textarea rows={3} />
+          <Input.TextArea rows={3} placeholder="Enter workflow description" />
         </Form.Item>
       </Form>
 
