@@ -6,7 +6,15 @@ const { Option } = Select;
 const StepForm = ({ form, steps, onFinish, onCancel, editingIndex }) => {
   const selectedAction = Form.useWatch('action', form);
   const selectedApprovalMode = Form.useWatch('approvalMode', form);
-
+    // ✅ Watch target/resume step positions
+    const targetStepPosition = Form.useWatch('targetStepPosition', form);
+    const resumeStepPosition = Form.useWatch('resumeStepPosition', form);
+  
+    // ✅ Debug logs
+    console.log('--- DEBUG StepForm ---');
+    console.log('targetStepPosition:', targetStepPosition);
+    console.log('resumeStepPosition:', resumeStepPosition);
+  
   return (
     <Form layout="vertical" form={form} onFinish={onFinish}>
       <Form.Item label="Step Name" name="stepName" rules={[{ required: true }]}>
@@ -45,14 +53,23 @@ const StepForm = ({ form, steps, onFinish, onCancel, editingIndex }) => {
         </>
       )}
 
-      <Form.Item label="Previous Step Position" name="previousStepPosition">
+      {/* <Form.Item label="Previous Step Position" name="previousStepPosition">
         <Select allowClear placeholder="Select previous step">
           <Option value={null}>-- Start (Initial Step) --</Option>
           {steps.map((step, idx) => (
             <Option key={step.key} value={idx}>{`${idx + 1}. ${step.stepName}`}</Option>
           ))}
         </Select>
+      </Form.Item> */}
+      <Form.Item label="Previous Step Position" name="previousStepPosition">
+        <Select allowClear placeholder="Select previous step">
+          <Option value="start">-- Start (Initial Step) --</Option>
+          {steps.map((step, idx) => (
+            <Option key={step.key} value={idx}>{`${idx + 1}. ${step.stepName}`}</Option>
+          ))}
+        </Select>
       </Form.Item>
+     
 
       <Form.Item label="Next Step Position" name="nextStepPosition">
         <Select allowClear placeholder="Select next step">
